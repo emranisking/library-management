@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="libraryApp">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Library Management</title>
+  <base href="/">
+  <link rel="stylesheet" href="vendor/bootstrap.min.css">
+  <link rel="stylesheet" href="vendor/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body ng-controller="ShellController as shell">
+
+  <nav class="topbar">
+    <div class="container topbar-inner">
+      <a class="brand" href="#!/books">
+        <span class="brand-mark"><i class="bi bi-journal-bookmark-fill"></i></span>
+        <span class="brand-text">Library<span>Hub</span></span>
+      </a>
+      <a class="btn btn-primary btn-pill" href="#!/books/new">
+        <i class="bi bi-plus-lg"></i><span class="d-none d-sm-inline">Add book</span>
+      </a>
+    </div>
+  </nav>
+
+  <main class="container page">
+    <div class="view-frame" ng-view autoscroll="false"></div>
+  </main>
+
+  <footer class="footer">
+    <div class="container">Library Management System &middot; AngularJS &middot; Flask &middot; SQLite</div>
+  </footer>
+
+  <!-- toasts -->
+  <div class="toast-stack" aria-live="polite">
+    <div class="toast-item toast-{{t.type}}" ng-repeat="t in shell.toasts track by t.id" ng-click="shell.dismiss(t)">
+      <i class="bi" ng-class="{'bi-check-circle-fill': t.type==='success', 'bi-exclamation-triangle-fill': t.type==='error', 'bi-info-circle-fill': t.type==='info'}"></i>
+      <span>{{t.message}}</span>
+    </div>
+  </div>
+
+  <script src="vendor/angular.min.js"></script>
+  <script src="vendor/angular-route.min.js"></script>
+  <script src="vendor/angular-animate.min.js"></script>
+  <script src="app.js"></script>
+  <script src="routes/app.routes.js"></script>
+  <script src="services/toast.service.js"></script>
+  <script src="services/book.service.js"></script>
+  <script src="controllers/shell.controller.js"></script>
+  <script src="controllers/book-list.controller.js"></script>
+  <script src="controllers/book-form.controller.js"></script>
+</body>
+</html>

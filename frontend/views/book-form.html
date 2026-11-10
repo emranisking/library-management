@@ -1,0 +1,78 @@
+<section class="form-wrap">
+
+  <a class="back-link" href="#!/books"><i class="bi bi-arrow-left"></i> Back to library</a>
+
+  <div class="form-card">
+    <header class="form-head">
+      <span class="form-badge"><i class="bi" ng-class="vm.isEdit ? 'bi-pencil-square' : 'bi-plus-lg'"></i></span>
+      <div>
+        <h1 class="page-title">{{vm.isEdit ? 'Edit book' : 'Add a new book'}}</h1>
+        <p class="page-sub">{{vm.isEdit ? 'Update the details below.' : 'Fill in the details to add it to the library.'}}</p>
+      </div>
+    </header>
+
+    <div class="form-loading" ng-if="vm.loading">
+      <div class="skeleton sk-line"></div><div class="skeleton sk-line"></div><div class="skeleton sk-line sk-short"></div>
+    </div>
+
+    <div class="alert alert-soft-danger" ng-if="vm.error && vm.loading === false && !vm.book.title && vm.isEdit">
+      <i class="bi bi-exclamation-triangle-fill"></i> {{vm.error}}
+    </div>
+
+    <form name="bookForm" novalidate ng-submit="vm.save(bookForm)" ng-if="!vm.loading && !(vm.isEdit && vm.error && !vm.book.title)">
+
+      <div class="alert alert-soft-info" ng-if="vm.borrowedInfo">
+        <i class="bi bi-info-circle-fill"></i> Currently borrowed by <strong>{{vm.borrowedInfo}}</strong>. Editing details won't change the loan.
+      </div>
+
+      <div class="alert alert-soft-danger" ng-if="vm.error">
+        <i class="bi bi-exclamation-triangle-fill"></i> {{vm.error}}
+      </div>
+
+      <div class="mb-4">
+        <label for="title" class="form-label">Title <span class="req">*</span></label>
+        <input id="title" name="title" type="text" class="form-control form-control-lg" placeholder="e.g. Clean Code"
+               ng-model="vm.book.title" required maxlength="255"
+               ng-class="{'is-invalid': (bookForm.title.$touched || vm.submitted) && bookForm.title.$invalid}">
+        <div class="field-error" ng-if="(bookForm.title.$touched || vm.submitted) && bookForm.title.$error.required">Title is required</div>
+      </div>
+
+      <div class="mb-4">
+        <label for="author" class="form-label">Author <span class="req">*</span></label>
+        <input id="author" name="author" type="text" class="form-control form-control-lg" placeholder="e.g. Robert C. Martin"
+               ng-model="vm.book.author" required maxlength="255"
+               ng-class="{'is-invalid': (bookForm.author.$touched || vm.submitted) && bookForm.author.$invalid}">
+        <div class="field-error" ng-if="(bookForm.author.$touched || vm.submitted) && bookForm.author.$error.required">Author is required</div>
+      </div>
+
+      <div class="row g-4 mb-4">
+        <div class="col-sm-7">
+          <label for="category" class="form-label">Category <span class="opt">optional</span></label>
+          <input id="category" name="category" type="text" class="form-control form-control-lg" placeholder="e.g. Technology"
+                 ng-model="vm.book.category" list="category-list" maxlength="100" autocomplete="off">
+          <datalist id="category-list">
+            <option ng-repeat="c in vm.categories" value="{{c}}"></option>
+          </datalist>
+        </div>
+        <div class="col-sm-5">
+          <label for="year" class="form-label">Published year <span class="req">*</span></label>
+          <input id="year" name="year" type="number" class="form-control form-control-lg" placeholder="{{vm.maxYear}}"
+                 ng-model="vm.book.published_year" required min="{{vm.minYear}}" max="{{vm.maxYear}}" step="1"
+                 ng-class="{'is-invalid': (bookForm.year.$touched || vm.submitted) && bookForm.year.$invalid}">
+          <div class="field-error" ng-if="(bookForm.year.$touched || vm.submitted) && bookForm.year.$invalid">
+            Enter a year between {{vm.minYear}} and {{vm.maxYear}}
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost" ng-click="vm.cancel()">Cancel</button>
+        <button type="submit" class="btn btn-primary btn-pill btn-lg-pad" ng-disabled="vm.saving">
+          <span class="spinner-border spinner-border-sm" ng-if="vm.saving"></span>
+          <i class="bi bi-check2-circle" ng-if="!vm.saving"></i>
+          {{vm.isEdit ? 'Save changes' : 'Add book'}}
+        </button>
+      </div>
+    </form>
+  </div>
+</section>

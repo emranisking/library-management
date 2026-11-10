@@ -1,0 +1,148 @@
+<section>
+
+  <header class="page-head">
+    <div>
+      <h1 class="page-title">Your library</h1>
+      <p class="page-sub">Browse, lend and manage every book in the collection.</p>
+    </div>
+  </header>
+
+  <!-- stats -->
+  <div class="stats">
+    <div class="stat stat-total">
+      <span class="stat-icon"><i class="bi bi-collection"></i></span>
+      <div><div class="stat-value">{{vm.stats.total}}</div><div class="stat-label">Total books</div></div>
+    </div>
+    <div class="stat stat-available">
+      <span class="stat-icon"><i class="bi bi-check2-circle"></i></span>
+      <div><div class="stat-value">{{vm.stats.available}}</div><div class="stat-label">Available</div></div>
+    </div>
+    <div class="stat stat-borrowed">
+      <span class="stat-icon"><i class="bi bi-bookmark-check"></i></span>
+      <div><div class="stat-value">{{vm.stats.borrowed}}</div><div class="stat-label">Borrowed</div></div>
+    </div>
+  </div>
+
+  <!-- toolbar -->
+  <div class="toolbar">
+    <div class="search-box">
+      <i class="bi bi-search"></i>
+      <input type="search" class="form-control" placeholder="Search by title or author…"
+             ng-model="vm.filters.search"
+             ng-model-options="{ debounce: 300 }"
+             ng-change="vm.load()"
+             aria-label="Search books">
+    </div>
+    <select class="form-select category-select" ng-model="vm.filters.category" ng-change="vm.load()" aria-label="Filter by category">
+      <option value="">All categories</option>
+      <option ng-repeat="c in vm.categories" value="{{c}}">{{c}}</option>
+    </select>
+    <button class="btn btn-ghost" ng-if="vm.hasFilters()" ng-click="vm.clearFilters()">
+      <i class="bi bi-x-lg"></i> Clear
+    </button>
+  </div>
+
+  <!-- error -->
+  <div class="state-card state-error" ng-if="vm.error && !vm.loading">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <h3>Couldn't load books</h3>
+    <p>{{vm.error}}</p>
+    <button class="btn btn-primary btn-pill" ng-click="vm.load()"><i class="bi bi-arrow-clockwise"></i> Try again</button>
+  </div>
+
+  <!-- loading skeletons -->
+  <div class="book-grid" ng-if="vm.loading">
+    <div class="book-card skeleton-card" ng-repeat="n in [1,2,3,4,5,6]">
+      <div class="skeleton sk-cover"></div>
+      <div class="skeleton sk-line"></div>
+      <div class="skeleton sk-line sk-short"></div>
+      <div class="skeleton sk-btn"></div>
+    </div>
+  </div>
+
+  <!-- empty -->
+  <div class="state-card" ng-if="!vm.loading && !vm.error && vm.books.length === 0">
+    <i class="bi bi-inbox"></i>
+    <h3 ng-if="vm.hasFilters()">No matching books</h3>
+    <h3 ng-if="!vm.hasFilters()">Your library is empty</h3>
+    <p ng-if="vm.hasFilters()">Try a different search term or category.</p>
+    <p ng-if="!vm.hasFilters()">Add your first book to get started.</p>
+    <button class="btn btn-ghost" ng-if="vm.hasFilters()" ng-click="vm.clearFilters()">Clear filters</button>
+    <a class="btn btn-primary btn-pill" ng-if="!vm.hasFilters()" href="#!/books/new"><i class="bi bi-plus-lg"></i> Add book</a>
+  </div>
+
+  <!-- books -->
+  <div class="book-grid" ng-if="!vm.loading && !vm.error && vm.books.length">
+    <article class="book-card" ng-repeat="book in vm.books track by book.id">
+      <div class="cover {{vm.coverClass(book)}}">
+        <i class="bi {{vm.coverIcon(book)}}"></i>
+        <span class="status-pill" ng-class="book.is_borrowed ? 'is-borrowed' : 'is-available'">
+          <span class="dot"></span>{{book.is_borrowed ? 'Borrowed' : 'Available'}}
+        </span>
+      </div>
+
+      <div class="book-body">
+        <h3 class="book-title" title="{{book.title}}">{{book.title}}</h3>
+        <p class="book-author">{{book.author}}</p>
+        <div class="book-meta">
+          <span class="chip" ng-if="book.category">{{book.category}}</span>
+          <span class="chip chip-muted">{{book.published_year}}</span>
+        </div>
+        <p class="borrower" ng-if="book.is_borrowed"><i class="bi bi-person"></i> {{book.borrower_name}}</p>
+      </div>
+
+      <div class="book-actions">
+        <button class="btn btn-primary btn-sm btn-pill flex-grow-1" ng-if="!book.is_borrowed" ng-click="vm.openBorrow(book)">
+          <i class="bi bi-box-arrow-in-right"></i> Borrow
+        </button>
+        <button class="btn btn-success-soft btn-sm btn-pill flex-grow-1" ng-if="book.is_borrowed"
+                ng-click="vm.giveBack(book)" ng-disabled="vm.busyId === book.id">
+          <span class="spinner-border spinner-border-sm" ng-if="vm.busyId === book.id"></span>
+          <i class="bi bi-arrow-return-left" ng-if="vm.busyId !== book.id"></i> Return
+        </button>
+        <a class="icon-btn" href="#!/books/{{book.id}}/edit" title="Edit" aria-label="Edit {{book.title}}"><i class="bi bi-pencil-square"></i></a>
+        <button class="icon-btn icon-btn-danger" ng-click="vm.openDelete(book)" title="Delete" aria-label="Delete {{book.title}}"><i class="bi bi-trash3"></i></button>
+      </div>
+    </article>
+  </div>
+
+  <!-- borrow dialog -->
+  <div class="overlay" ng-if="vm.borrowDialog" ng-click="vm.closeBorrow()">
+    <form class="dialog" ng-click="$event.stopPropagation()" ng-submit="vm.confirmBorrow()" novalidate>
+      <div class="dialog-icon"><i class="bi bi-box-arrow-in-right"></i></div>
+      <h3>Borrow book</h3>
+      <p class="dialog-text">Who is borrowing <strong>{{vm.borrowDialog.book.title}}</strong>?</p>
+      <input type="text" class="form-control form-control-lg" placeholder="Borrower name" maxlength="255"
+             ng-model="vm.borrowDialog.name" ng-class="{'is-invalid': vm.borrowDialog.error}" autofocus
+             ng-keydown="$event.keyCode === 27 && vm.closeBorrow()">
+      <div class="field-error" ng-if="vm.borrowDialog.error">{{vm.borrowDialog.error}}</div>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-ghost" ng-click="vm.closeBorrow()">Cancel</button>
+        <button type="submit" class="btn btn-primary btn-pill" ng-disabled="vm.borrowDialog.busy">
+          <span class="spinner-border spinner-border-sm" ng-if="vm.borrowDialog.busy"></span> Confirm
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- delete dialog -->
+  <div class="overlay" ng-if="vm.deleteDialog" ng-click="vm.closeDelete()">
+    <div class="dialog" ng-click="$event.stopPropagation()">
+      <div class="dialog-icon dialog-icon-danger"><i class="bi bi-trash3"></i></div>
+      <h3>Delete book?</h3>
+      <p class="dialog-text">
+        <strong>{{vm.deleteDialog.book.title}}</strong> will be permanently removed.
+        <span ng-if="vm.deleteDialog.book.is_borrowed" class="d-block mt-2 text-danger-emphasis">
+          This book is currently borrowed and can't be deleted until it is returned.
+        </span>
+      </p>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-ghost" ng-click="vm.closeDelete()">Cancel</button>
+        <button type="button" class="btn btn-danger btn-pill" ng-click="vm.confirmDelete()" ng-disabled="vm.deleteDialog.busy">
+          <span class="spinner-border spinner-border-sm" ng-if="vm.deleteDialog.busy"></span> Delete
+        </button>
+      </div>
+    </div>
+  </div>
+
+</section>
