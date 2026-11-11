@@ -1,3 +1,4 @@
-Dockerfile
-nginx.conf
-.dockerignore
+.git
+node_modules
+*.log
+.DS_Store
